@@ -2,6 +2,8 @@ import os
 
 import pygame
 
+from classes.runtime_paths import resource_path
+
 class DinoClass:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -12,9 +14,8 @@ class DinoClass:
         self.is_jumping = False
         self.gravity = 0.6
         self.jump_strength = -11
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        image_path = os.path.join(base_dir, "assets", "dino.png")
-        self.image = pygame.image.load(image_path)
+        image_path = resource_path("assets", "dino.png")
+        self.image = pygame.image.load(str(image_path))
         self.image = pygame.transform.scale(self.image, (width, height))
         
     def jump(self):
