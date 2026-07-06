@@ -3,6 +3,8 @@ import random
 import json
 import os
 
+BASE_DIR = os.path.dirname(__file__)
+
 from classes.DinoClass import DinoClass
 from classes.BirdClass import BirdClass
 from classes.CactusClass import CactusClass
@@ -61,7 +63,7 @@ class DinoRunnerClass:
         self.obstacle.speed = OBSTACLE_SPEED
 
     def load_highscore(self):
-        score_file = "data/score.json"
+        score_file = os.path.join(BASE_DIR, "data", "score.json")
         if os.path.exists(score_file):
             try:
                 with open(score_file, "r") as f:
@@ -72,7 +74,7 @@ class DinoRunnerClass:
         return 0
 
     def save_highscore(self, score):
-        score_file = "data/score.json"
+        score_file = os.path.join(BASE_DIR, "data", "score.json")
         with open(score_file, "w") as f:
             json.dump({"highscore": score}, f)
 
