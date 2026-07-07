@@ -20,14 +20,17 @@ DINO_Y = 300
 DINO_WIDTH = 40
 DINO_HEIGHT = 40
 
+
 OBSTACLE_X = 800
 OBSTACLE_Y = 300
 OBSTACLE_SPEED = 10
-OBSTACLE_SPEED_INCREASE = 1
+OBSTACLE_SPEED_INCREASE = 0.5
 SPEED_INCREASE_INTERVAL_MS = 5000
 OBSTACLE_SPAWN_OFFSET_MIN = 80
 OBSTACLE_SPAWN_OFFSET_MAX = 260
 OBSTACLE_VARIANTS = ["cactus", "bird"]
+SPAWN_INTERVAL_MIN_MS = 700
+SPAWN_INTERVAL_MAX_MS = 1600
 
 class DinoRunnerClass:
     def __init__(self):
@@ -46,7 +49,10 @@ class DinoRunnerClass:
         self.last_speed_increase_time = pygame.time.get_ticks()
 
         self.dino = DinoClass(DINO_X, DINO_Y, DINO_WIDTH, DINO_HEIGHT)
-        self.obstacle = self.create_obstacle()
+        # obstacle management: allow multiple active obstacles and timed spawns
+        self.obstacles = []
+        self.obstacle_speed = OBSTACLE_SPEED
+        self.next_spawn_time = pygame.time.get_ticks() + random.randint(SPAWN_INTERVAL_MIN_MS, SPAWN_INTERVAL_MAX_MS)
 
         self.running = True
         self.game_over = False
@@ -57,12 +63,15 @@ class DinoRunnerClass:
 
     def reset_game(self):
         self.dino = DinoClass(DINO_X, DINO_Y, DINO_WIDTH, DINO_HEIGHT)
-        self.obstacle = self.create_obstacle()
+        self.obstacles = []
+        self.obstacle_speed = OBSTACLE_SPEED
+        self.next_spawn_time = pygame.time.get_ticks() + random.randint(SPAWN_INTERVAL_MIN_MS, SPAWN_INTERVAL_MAX_MS)
         self.game_over = False
         self.last_speed_increase_time = pygame.time.get_ticks()
         self.game_start_time = pygame.time.get_ticks()
         self.current_score = 0
-        self.obstacle.speed = OBSTACLE_SPEED
+        # inform dino of reset speed
+        self.dino.scale_movement_for_speed(self.obstacle_speed)
 
     def load_highscore(self):
         score_file = BASE_DIR / "data" / "score.json"
@@ -99,6 +108,15 @@ class DinoRunnerClass:
         # default: single
         return CactusClass(spawn_x, OBSTACLE_Y, speed, variant=1)
 
+    def try_spawn(self):
+        now = pygame.time.get_ticks()
+        if now >= self.next_spawn_time:
+            self.obstacles.append(self.create_obstacle(self.obstacle_speed))
+            interval = random.randint(SPAWN_INTERVAL_MIN_MS, SPAWN_INTERVAL_MAX_MS)
+            # slightly shorten interval as speed increases
+            speed_factor = 1.0 / max(1.0, (1.0 + (self.obstacle_speed - OBSTACLE_SPEED) * 0.03))
+            self.next_spawn_time = now + int(interval * speed_factor)
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -118,27 +136,32 @@ class DinoRunnerClass:
         self.current_score = (pygame.time.get_ticks() - self.game_start_time) // 100
 
     def update_obstacles(self):
-        self.obstacle.update()
-        if self.obstacle.is_off_screen():
-            self.obstacle = self.create_obstacle(self.obstacle.speed)
+        for obs in list(self.obstacles):
+            obs.speed = self.obstacle_speed
+            obs.update()
+            if obs.is_off_screen():
+                self.obstacles.remove(obs)
 
 
     def increase_obstacle_speed(self):
         current_time = pygame.time.get_ticks()
         if current_time - self.last_speed_increase_time >= SPEED_INCREASE_INTERVAL_MS:
-            self.obstacle.speed += OBSTACLE_SPEED_INCREASE
+            self.obstacle_speed += OBSTACLE_SPEED_INCREASE
+            # update dino movement to match faster obstacles
+            self.dino.scale_movement_for_speed(self.obstacle_speed)
             self.last_speed_increase_time = current_time
 
     def check_collision(self):
-        for obstacle_rect in self.obstacle.get_rects():
-            if self.dino.get_rect().colliderect(obstacle_rect):
-                print(f"Game Over! Score: {self.current_score}")
-                if self.current_score > self.highscore:
-                    self.highscore = self.current_score
-                    self.save_highscore(self.highscore)
-                    print(f"New Highscore: {self.highscore}")
-                self.game_over = True
-                break
+        for obs in self.obstacles:
+            for obstacle_rect in obs.get_rects():
+                if self.dino.get_rect().colliderect(obstacle_rect):
+                    print(f"Game Over! Score: {self.current_score}")
+                    if self.current_score > self.highscore:
+                        self.highscore = self.current_score
+                        self.save_highscore(self.highscore)
+                        print(f"New Highscore: {self.highscore}")
+                    self.game_over = True
+                    return
 
     def draw_game_over(self):
         overlay = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
@@ -174,7 +197,8 @@ class DinoRunnerClass:
         self.screen.fill(self.WHITE)
         pygame.draw.line(self.screen, self.BLACK, (0, 340), (self.SCREEN_WIDTH, 340), 2)
         self.dino.draw(self.screen, self.BLACK)
-        self.obstacle.draw(self.screen, self.BLACK)
+        for obs in self.obstacles:
+            obs.draw(self.screen, self.BLACK)
 
         small_font = pygame.font.Font(None, 24)
 
@@ -199,8 +223,10 @@ class DinoRunnerClass:
                 self.draw_game_over()
             else:
                 self.update_physics()
-                if self.obstacle.speed < 30:
+                if self.obstacle_speed < 26:
                     self.increase_obstacle_speed()
+                # spawn new obstacles based on timer
+                self.try_spawn()
                 self.update_obstacles()
                 self.check_collision()
                 self.draw()
