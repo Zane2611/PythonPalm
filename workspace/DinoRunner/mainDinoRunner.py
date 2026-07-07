@@ -83,12 +83,21 @@ class DinoRunnerClass:
 
     def create_obstacle(self, speed=OBSTACLE_SPEED):
         spawn_x = self.SCREEN_WIDTH + random.randint(OBSTACLE_SPAWN_OFFSET_MIN, OBSTACLE_SPAWN_OFFSET_MAX)
-        obstacle_type = random.choice(OBSTACLE_VARIANTS)
+        # Types: 'single'=single cactus, 'double'=two cactuses, 'triple'=three-part cactus, 'bird'
+        # Weights: single 30%, double 30%, triple 30%, bird 10%
+        choice = random.choices(['single', 'double', 'triple', 'bird'], weights=[30, 30, 30, 10], k=1)[0]
 
-        if obstacle_type == "bird":
+        if choice == 'bird':
             return BirdClass(spawn_x, OBSTACLE_Y, speed)
 
-        return CactusClass(spawn_x, OBSTACLE_Y, speed)
+        if choice == 'double':
+            return CactusClass(spawn_x, OBSTACLE_Y, speed, variant=2)
+
+        if choice == 'triple':
+            return CactusClass(spawn_x, OBSTACLE_Y, speed, variant=3)
+
+        # default: single
+        return CactusClass(spawn_x, OBSTACLE_Y, speed, variant=1)
 
     def handle_events(self):
         for event in pygame.event.get():

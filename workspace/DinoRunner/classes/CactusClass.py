@@ -12,11 +12,15 @@ TRIPLE_SIDE_OFFSET = 24
 
 
 class CactusClass:
-    def __init__(self, x, y, speed):
+    def __init__(self, x, y, speed, variant=None):
         self.x = x
         self.y = y
         self.speed = speed
-        self.variant = random.choice([1, 1, 1, 3, 3])
+        # variant: 1=single, 2=double, 3=triple
+        if variant is None:
+            self.variant = random.choice([1, 1, 1, 3, 3])
+        else:
+            self.variant = variant
         self.parts = self.build_parts()
 
     def build_parts(self):
@@ -25,6 +29,13 @@ class CactusClass:
                 {"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
                 {"offset_x": TRIPLE_SIDE_OFFSET, "offset_y": -TRIPLE_MIDDLE_Y_OFFSET, "width": TRIPLE_MIDDLE_WIDTH, "height": TRIPLE_MIDDLE_HEIGHT},
                 {"offset_x": TRIPLE_SIDE_OFFSET + TRIPLE_MIDDLE_WIDTH + 6, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
+            ]
+        if self.variant == 2:
+            # double cactus: two single-width cactuses with a small gap
+            double_gap = 6
+            return [
+                {"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
+                {"offset_x": CACTUS_WIDTH + double_gap, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
             ]
 
         return [{"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT}]

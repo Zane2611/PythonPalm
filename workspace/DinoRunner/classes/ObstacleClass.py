@@ -19,7 +19,9 @@ class ObstacleClass:
         self.x = x
         self.y = y
         self.speed = speed
-        self.variant = random.choice([1, 1, 1,1, 1, 1, 1, 3, 3, 3,  3, 3,1, 1, 1,1, 1, 1, 1, 3, 3, 3,  3, 3,4,1, 1, 1,1, 1, 1, 1, 3, 3, 3,  3, 3,1, 1, 1,1, 1, 1, 1, 3, 3, 3,  3, 3])
+        # Variants: 1=single cactus, 2=double cactus, 3=triple cactus, 4=bird
+        # Weights: single 30%, double 30%, triple 30%, bird 10%
+        self.variant = random.choices([1, 2, 3, 4], weights=[30, 30, 30, 10], k=1)[0]
         self.parts = self.build_parts()
 
     def build_parts(self):
@@ -30,11 +32,20 @@ class ObstacleClass:
                 {"offset_x": TRIPLE_SIDE_OFFSET + TRIPLE_MIDDLE_WIDTH + 6, "offset_y": 0, "width": OBSTACLE_WIDTH, "height": OBSTACLE_HEIGHT},
             ]
 
+        if self.variant == 2:
+            # double cactus: two single-width cactuses with a small gap
+            double_gap = 6
+            return [
+                {"offset_x": 0, "offset_y": 0, "width": OBSTACLE_WIDTH, "height": OBSTACLE_HEIGHT},
+                {"offset_x": OBSTACLE_WIDTH + double_gap, "offset_y": 0, "width": OBSTACLE_WIDTH, "height": OBSTACLE_HEIGHT},
+            ]
+
         if self.variant == 4:
             return [
                 {"offset_x": 0, "offset_y": BIRD_Y_OFFSET, "width": BIRD_WIDTH, "height": BIRD_HEIGHT},
             ]
 
+        # variant 1: single cactus
         return [{"offset_x": 0, "offset_y": 0, "width": OBSTACLE_WIDTH, "height": OBSTACLE_HEIGHT}]
 
     def update(self):
