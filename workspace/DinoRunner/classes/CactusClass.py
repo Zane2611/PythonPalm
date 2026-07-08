@@ -2,13 +2,15 @@ import random
 
 import pygame
 
+from classes.runtime_paths import resource_path
 
-CACTUS_WIDTH = 20
-CACTUS_HEIGHT = 40
-TRIPLE_MIDDLE_WIDTH = 24
-TRIPLE_MIDDLE_HEIGHT = 52
+
+CACTUS_WIDTH = 24
+CACTUS_HEIGHT = 36
+TRIPLE_MIDDLE_WIDTH = 28
+TRIPLE_MIDDLE_HEIGHT = 46
 TRIPLE_MIDDLE_Y_OFFSET = 12
-TRIPLE_SIDE_OFFSET = 24
+TRIPLE_SIDE_OFFSET = 28
 
 
 class CactusClass:
@@ -21,24 +23,37 @@ class CactusClass:
             self.variant = random.choice([1, 1, 1, 3, 3])
         else:
             self.variant = variant
+        self.base_image = pygame.image.load(str(resource_path("assets", "bones.png"))).convert_alpha()
         self.parts = self.build_parts()
+
+    def create_part(self, offset_x, offset_y, width, height):
+        image_width = int(width * 1.1)
+        image_offset_x = offset_x - ((image_width - width) // 2)
+        return {
+            "offset_x": offset_x,
+            "offset_y": offset_y,
+            "width": width,
+            "height": height,
+            "image_offset_x": image_offset_x,
+            "image": pygame.transform.smoothscale(self.base_image, (image_width, height)),
+        }
 
     def build_parts(self):
         if self.variant == 3:
             return [
-                {"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
-                {"offset_x": TRIPLE_SIDE_OFFSET, "offset_y": -TRIPLE_MIDDLE_Y_OFFSET, "width": TRIPLE_MIDDLE_WIDTH, "height": TRIPLE_MIDDLE_HEIGHT},
-                {"offset_x": TRIPLE_SIDE_OFFSET + TRIPLE_MIDDLE_WIDTH + 6, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
+                self.create_part(0, 0, CACTUS_WIDTH, CACTUS_HEIGHT),
+                self.create_part(TRIPLE_SIDE_OFFSET, -TRIPLE_MIDDLE_Y_OFFSET, TRIPLE_MIDDLE_WIDTH, TRIPLE_MIDDLE_HEIGHT),
+                self.create_part(TRIPLE_SIDE_OFFSET + TRIPLE_MIDDLE_WIDTH + 6, 0, CACTUS_WIDTH, CACTUS_HEIGHT),
             ]
         if self.variant == 2:
             # double cactus: two single-width cactuses with a small gap
-            double_gap = 6
+            double_gap = 8
             return [
-                {"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
-                {"offset_x": CACTUS_WIDTH + double_gap, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT},
+                self.create_part(0, 0, CACTUS_WIDTH, CACTUS_HEIGHT),
+                self.create_part(CACTUS_WIDTH + double_gap, 0, CACTUS_WIDTH, CACTUS_HEIGHT),
             ]
 
-        return [{"offset_x": 0, "offset_y": 0, "width": CACTUS_WIDTH, "height": CACTUS_HEIGHT}]
+        return [self.create_part(0, 0, CACTUS_WIDTH, CACTUS_HEIGHT)]
 
     def update(self):
         self.x -= self.speed
@@ -51,16 +66,7 @@ class CactusClass:
 
     def draw(self, screen, color=(0, 0, 0)):
         for part in self.parts:
-            pygame.draw.rect(
-                screen,
-                color,
-                (
-                    self.x + part["offset_x"],
-                    self.y + part["offset_y"],
-                    part["width"],
-                    part["height"],
-                ),
-            )
+            screen.blit(part["image"], (self.x + part["image_offset_x"], self.y + part["offset_y"] + 5))
 
     def get_rects(self):
         return [

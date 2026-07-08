@@ -1,5 +1,7 @@
 import pygame
 
+from classes.runtime_paths import resource_path
+
 
 BIRD_WIDTH = 45
 BIRD_HEIGHT = 16
@@ -11,6 +13,8 @@ class BirdClass:
         self.x = x
         self.y = y
         self.speed = speed
+        self.base_image = pygame.image.load(str(resource_path("assets", "bird.png"))).convert_alpha()
+        self.image = pygame.transform.smoothscale(self.base_image, (BIRD_WIDTH, BIRD_HEIGHT))
         self.parts = [
             {"offset_x": 0, "offset_y": BIRD_Y_OFFSET, "width": BIRD_WIDTH, "height": BIRD_HEIGHT},
         ]
@@ -26,16 +30,7 @@ class BirdClass:
 
     def draw(self, screen, color=(0, 0, 0)):
         for part in self.parts:
-            pygame.draw.rect(
-                screen,
-                color,
-                (
-                    self.x + part["offset_x"],
-                    self.y + part["offset_y"],
-                    part["width"],
-                    part["height"],
-                ),
-            )
+            screen.blit(self.image, (self.x + part["offset_x"], self.y + part["offset_y"]))
 
     def get_rects(self):
         return [
