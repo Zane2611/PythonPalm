@@ -39,6 +39,7 @@ SPINO_TRIGGER_SCORE = 100
 SPINO_SEQUENCE_COUNT = 3
 SPINO_SEQUENCE_GAP_MS = 850
 CODEWORD_TRIGGER_SCORE = 150
+CODEWORD = "Das ist das Code Wort"
 
 
 
@@ -252,7 +253,7 @@ class DinoRunnerClass:
         small_font = pygame.font.Font(None, 28)
 
         if self.current_score >= CODEWORD_TRIGGER_SCORE:
-            codeword = text_font.render("Das ist das Code Wort", True, self.GREEN)
+            codeword = text_font.render(CODEWORD, True, self.GREEN)
             codeword_rect = codeword.get_rect(center=(self.SCREEN_WIDTH // 2, 220))
             self.screen.blit(codeword, codeword_rect)
 
@@ -325,7 +326,7 @@ class DinoRunnerClass:
             elapsed = pygame.time.get_ticks() - self.fade_start_time
 
             # Create text surface
-            codeword = small_font.render("Oh nein wie habt ihr es soweit geschafft?", True, self.BLACK)
+            codeword = small_font.render("Holy Moly, wie habt ihr es soweit geschafft?", True, self.BLACK)
             codeword = codeword.convert_alpha()  
 
             # After display_duration, start fading
