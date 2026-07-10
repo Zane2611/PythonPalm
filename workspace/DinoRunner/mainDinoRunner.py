@@ -38,15 +38,26 @@ EARLY_GAME_SPAWN_MULTIPLIER = 1.7
 SPINO_TRIGGER_SCORE = 100
 SPINO_SEQUENCE_COUNT = 3
 SPINO_SEQUENCE_GAP_MS = 850
+CODEWORD_TRIGGER_SCORE = 150
+
+
+
+
 
 class DinoRunnerClass:
     def __init__(self):
         pygame.init()
 
+        self.fade_alpha = 255
+        self.fade_start_time = None
+        self.fade_duration = 2000  # fade out over 2 seconds
+        self.display_duration = 1000  # show text for 1 second before fading
+
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.WHITE = (235, 235, 235)
         self.BLACK = (0, 0, 0)
+        self.GREEN = (0, 255, 0)
 
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         pygame.display.set_caption("Dino Runner in Python")
@@ -240,6 +251,11 @@ class DinoRunnerClass:
         text_font = pygame.font.Font(None, 36)
         small_font = pygame.font.Font(None, 28)
 
+        if self.current_score >= CODEWORD_TRIGGER_SCORE:
+            codeword = text_font.render("Das ist das Code Wort", True, self.GREEN)
+            codeword_rect = codeword.get_rect(center=(self.SCREEN_WIDTH // 2, 220))
+            self.screen.blit(codeword, codeword_rect)
+
         game_over_text = title_font.render("GAME OVER", True, self.BLACK)
         final_score_text = text_font.render(f"Score: {self.current_score}", True, self.BLACK)
         highscore_text = text_font.render(f"Highscore: {self.highscore}", True, self.BLACK)
@@ -269,6 +285,62 @@ class DinoRunnerClass:
             obs.draw(self.screen, self.BLACK)
 
         small_font = pygame.font.Font(None, 24)
+
+        if self.spino_sequence_remaining > 0:
+
+            # Start timer once
+            if self.fade_start_time is None:
+                self.fade_start_time = pygame.time.get_ticks()
+
+            elapsed = pygame.time.get_ticks() - self.fade_start_time
+
+            # Create text surface
+            codeword = small_font.render("Ihr könnt mich nie besiegen", True, self.BLACK)
+            codeword = codeword.convert_alpha()  # important for transparency
+
+            # After display_duration, start fading
+            if elapsed > self.display_duration:
+                fade_elapsed = elapsed - self.display_duration
+                fade_progress = fade_elapsed / self.fade_duration
+                self.fade_alpha = max(0, 255 - int(255 * fade_progress))
+
+            # Apply alpha
+            codeword.set_alpha(self.fade_alpha)
+
+            # Draw
+            codeword_rect = codeword.get_rect(center=(self.SCREEN_WIDTH // 2, 180))
+            self.screen.blit(codeword, codeword_rect)
+
+            #reset 
+            self.fade_start_time = None
+            self.fade_alpha = 255
+            
+
+        if self.current_score > CODEWORD_TRIGGER_SCORE:
+
+            # Start timer once
+            if self.fade_start_time is None:
+                self.fade_start_time = pygame.time.get_ticks()
+
+            elapsed = pygame.time.get_ticks() - self.fade_start_time
+
+            # Create text surface
+            codeword = small_font.render("Oh nein wie habt ihr es soweit geschafft?", True, self.BLACK)
+            codeword = codeword.convert_alpha()  
+
+            # After display_duration, start fading
+            if elapsed > self.display_duration:
+                fade_elapsed = elapsed - self.display_duration
+                fade_progress = fade_elapsed / self.fade_duration
+                self.fade_alpha = max(0, 255 - int(255 * fade_progress))
+
+            # Apply alpha
+            codeword.set_alpha(self.fade_alpha)
+
+            # Draw
+            codeword_rect = codeword.get_rect(center=(self.SCREEN_WIDTH // 2, 180))
+            self.screen.blit(codeword, codeword_rect)
+
 
         score_text = small_font.render(f"Score: {self.current_score}", True, self.BLACK)
         highscore_text = small_font.render(f"Highscore: {self.highscore}", True, self.BLACK)
